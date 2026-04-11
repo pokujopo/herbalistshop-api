@@ -1,0 +1,421 @@
+import { useState } from "react";
+
+function AdminProductForm() {
+  const [form, setForm] = useState({
+    name: "",
+    slug: "",
+    short_description: "",
+    description: "",
+    price: "",
+    discount_price: "",
+    stock: "",
+    category_id: "",
+    is_featured: false,
+    is_best_seller: false,
+    is_new: true,
+    is_active: true,
+    sku: "",
+  });
+
+  const [thumbnail, setThumbnail] = useState(null);
+  const [preview, setPreview] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const token = "1|jKa0Qsv3pMJ1xS9Celkas9YsQquLrwZabOtDscgmbf463c33";
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+
+    setForm((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    setThumbnail(file);
+
+    if (file) {
+      setPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData();
+
+    Object.entries(form).forEach(([key, value]) => {
+      if (typeof value === "boolean") {
+        formData.append(key, value ? "1" : "0");
+      } else {
+        formData.append(key, value);
+      }
+    });
+
+    if (thumbnail) {
+      formData.append("thumbnail", thumbnail);
+    }
+
+    try {
+      setLoading(true);
+
+      const res = await fetch("http://127.0.0.1:8000/api/products", {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const data = await res.json();
+      console.log("Response:", data);
+
+      if (!res.ok) {
+        alert(data.message || "Kuna tatizo.");
+        return;
+      }
+
+      alert("Product created successfully 🔥");
+
+      setForm({
+        name: "",
+        slug: "",
+        short_description: "",
+        description: "",
+        price: "",
+        discount_price: "",
+        stock: "",
+        category_id: "",
+        is_featured: false,
+        is_best_seller: false,
+        is_new: true,
+        is_active: true,
+        sku: "",
+      });
+      setThumbnail(null);
+      setPreview(null);
+    } catch (error) {
+      console.error(error);
+      alert("Error ya network au server.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <section className="bg-gray-50 min-h-screen py-10 px-4">
+      <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow p-6">
+        <h2 className="text-2xl font-bold mb-6">Create Product</h2>
+
+        <form onSubmit={handleSubmit} className="grid gap-4">
+          <input
+            type="text"
+            name="name"
+            placeholder="Product name"
+            value={form.name}
+            onChange={handleChange}
+            className="border rounded-lg p-3"
+            required
+          />
+
+          <input
+            type="text"
+            name="slug"
+            placeholder="product-slug"
+            value={form.slug}
+            onChange={handleChange}
+            className="border rounded-lg p-3"
+            required
+          />
+
+          <input
+            type="text"
+            name="sku"
+            placeholder="SKU (optional)"
+            value={form.sku}
+            onChange={handleChange}
+            className="border rounded-lg p-3"
+          />
+
+          <textarea
+            name="short_description"
+            placeholder="Short description"
+            value={form.short_description}
+            onChange={handleChange}
+            className="border rounded-lg p-3"
+            rows={2}
+          />
+
+          <textarea
+            name="description"
+            placeholder="Full description"
+            value={form.description}
+            onChange={handleChange}
+            className="border rounded-lg p-3"
+            rows={5}
+          />
+
+          <div className="grid grid-cols-2 gap-4">
+            <input
+              type="number"
+              name="price"
+              placeholder="Price"
+              value={form.price}
+              onChange={handleChange}
+              className="border rounded-lg p-3"
+              required
+            />
+
+            <input
+              type="number"
+              name="discount_price"
+              placeholder="Discount price"
+              value={form.discount_price}
+              onChange={handleChange}
+              className="border rounded-lg p-3"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <input
+              type="number"
+              name="stock"
+              placeholder="Stock"
+              value={form.stock}
+              onChange={handleChange}
+              className="border rounded-lg p-3"
+              required
+            />
+
+            <input
+              type="number"
+              name="category_id"
+              placeholder="Category ID"
+              value={form.category_id}
+              onChange={handleChange}
+              className="border rounded-lg p-3"
+              required
+            />
+          </div>
+
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            className="border rounded-lg p-3"
+            required
+          />
+
+          {preview && (
+            <div className="w-40 aspect-square overflow-hidden rounded-xl border">
+              <img
+                src={preview}
+                alt="Preview"
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                name="is_featured"
+                checked={form.is_featured}
+                onChange={handleChange}
+              />
+              Featured
+            </label>
+
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                name="is_best_seller"
+                checked={form.is_best_seller}
+                onChange={handleChange}
+              />
+              Best Seller
+            </label>
+
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                name="is_new"
+                checked={form.is_new}
+                onChange={handleChange}
+              />
+              New
+            </label>
+
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                name="is_active"
+                checked={form.is_active}
+                onChange={handleChange}
+              />
+              Active
+            </label>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="bg-green-600 text-white rounded-xl py-3 font-semibold hover:bg-green-700 transition"
+          >
+            {loading ? "Uploading..." : "Create Product"}
+          </button>
+        </form>
+      </div>
+    </section>
+  );
+}
+
+export default AdminProductForm;
+
+
+/* import { useState } from "react"
+
+function Auth(){
+
+  const [isLogin, setIsLogin] = useState(true)
+
+  return(
+    <section className="min-h-screen bg-gradient-to-br  from-green-50 to-gray-100 flex items-center justify-center px-4">
+
+      <div className="max-w-6xl w-full  m-7 grid md:grid-cols-2 bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden">
+
+        {/* LEFT SIDE */}
+        <div className="hidden md:flex flex-col justify-between p-10 bg-gradient-to-br from-green-600 to-green-800 text-white">
+
+          <div>
+            <h2 className="text-3xl font-bold">Afya Shop 🌿</h2>
+            <p className="text-sm mt-2 opacity-80">
+              Dawa za asili kwa afya bora
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-2xl font-semibold leading-snug">
+              Nunua bidhaa bora kwa urahisi na usalama
+            </h3>
+          </div>
+
+          <p className="text-sm opacity-70">
+            © 2026 All rights reserved
+          </p>
+
+        </div>
+
+        {/* RIGHT SIDE */}
+        <div className="p-8 md:p-12 flex flex-col justify-center">
+
+          <h2 className="text-2xl font-bold mb-2">
+            {isLogin ? "Welcome Back 👋" : "Create Account 🚀"}
+          </h2>
+
+          <p className="text-gray-500 text-sm mb-6">
+            {isLogin ? "Login to continue" : "Start your journey with us"}
+          </p>
+
+          {/* SOCIAL LOGIN */}
+          <div className="flex gap-3 mb-6">
+
+            <button className="flex-1 flex items-center justify-center gap-2 border rounded-xl py-2 hover:bg-gray-50 transition">
+              <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-5 h-5"/>
+              Google
+            </button>
+
+            <button className="flex-1 flex items-center justify-center gap-2 border rounded-xl py-2 hover:bg-gray-50 transition">
+              <img src="https://www.svgrepo.com/show/475647/facebook-color.svg" className="w-5 h-5"/>
+              Facebook
+            </button>
+
+          </div>
+
+          {/* DIVIDER */}
+          <div className="flex items-center gap-2 mb-6">
+            <div className="flex-1 h-px bg-gray-200"></div>
+            <span className="text-xs text-gray-400">OR</span>
+            <div className="flex-1 h-px bg-gray-200"></div>
+          </div>
+
+          {/* FORM */}
+          <form className="flex flex-col gap-5">
+
+            {!isLogin && (
+              <div className="relative">
+                <input type="text" required className="peer w-full border rounded-xl px-4 pt-5 pb-2 focus:ring-2 focus:ring-green-500 outline-none"/>
+                <label className="absolute left-4 top-2 text-xs text-gray-500 transition-all peer-placeholder-shown:top-3 peer-placeholder-shown:text-sm peer-placeholder-shown:text-gray-400">
+                  Full Name
+                </label>
+              </div>
+            )}
+
+            <div className="relative">
+              <input type="tel" required className="peer w-full border rounded-xl px-4 pt-5 pb-2 focus:ring-2 focus:ring-green-500 outline-none"/>
+              <label className="absolute left-4 top-2 text-xs text-gray-500 peer-placeholder-shown:top-3 peer-placeholder-shown:text-sm peer-placeholder-shown:text-gray-400">
+                Phone Number
+              </label>
+            </div>
+
+            <div className="relative">
+              <input type="password" required className="peer w-full border rounded-xl px-4 pt-5 pb-2 focus:ring-2 focus:ring-green-500 outline-none"/>
+              <label className="absolute left-4 top-2 text-xs text-gray-500 peer-placeholder-shown:top-3 peer-placeholder-shown:text-sm peer-placeholder-shown:text-gray-400">
+                Password
+              </label>
+            </div>
+
+            {!isLogin && (
+              <div className="relative">
+                <input type="password" required className="peer w-full border rounded-xl px-4 pt-5 pb-2 focus:ring-2 focus:ring-green-500 outline-none"/>
+                <label className="absolute left-4 top-2 text-xs text-gray-500 peer-placeholder-shown:top-3 peer-placeholder-shown:text-sm peer-placeholder-shown:text-gray-400">
+                  Confirm Password
+                </label>
+              </div>
+            )}
+
+            {/* BUTTON */}
+            <button className="bg-green-600 text-white py-3 rounded-xl font-semibold hover:bg-green-700 transition shadow-lg hover:shadow-xl">
+              {isLogin ? "Login" : "Create Account"}
+            </button>
+
+          </form>
+
+          {/* SWITCH */}
+          <p className="text-sm text-gray-500 mt-6 text-center">
+            {isLogin ? "No account?" : "Already have account?"}
+            <button 
+              onClick={()=>setIsLogin(!isLogin)}
+              className="text-green-600 ml-1 font-semibold"
+            >
+              {isLogin ? "Sign Up" : "Login"}
+            </button>
+          </p>
+
+        </div>
+
+      </div>
+
+    </section>
+  )
+}
+
+export default Auth  */}
+
+
+
+
+
+
+
+curl -X POST https://authenticator-sandbox.azampay.co.tz/AppRegistration/GenerateToken \
+-H "Content-Type: application/json" \
+-d '{
+  "appName": "market",
+  "clientId": "6a015f7f-6fed-4c88-ab7e-94ff6a5ea811",
+  "clientSecret": "H2FZA7BCoKQtlIdakoCvPqrowvJP3Y7S1QQqpgoyu2CJ582ijkbC+YTRsjwCqDs5iaud3MqbY7nRKR+I1RL09uSWuXl5T45JUonrCqNrMihPssxy//3htDeXzRl7Nz8yb/liJjgopE+Os7ONQSwswkqusB6LQDRpwJfHbYKSHhNEb0UqMYVqoqz+mii0GkXdzYuxLJKbKDSorkhhpwBojC/K+NsiWMiB35ODzbvaD42YW1oY5APwHVnsfIPlwD+Q5sqQO57bBnX21+ET9k846uQWUVeWOEUXPtzBcMabuuQglI+NBAsePGbbhY5qAohrGhxc+pdwhyQrQcQCFtZGBxR5rj43yQvZENBD+hWjEFTy6s7tsfzwNgRw0nduQFFo7gkknG89A60gfQ5Q6BkvZa2czkuv+MuQiJ4sr7+pbS3SLVIk4idsKnVydwlrVMPyUH/iQqbDonl6nYkC10gUkH/7wb3N0y2ElDnJQcPX3zxdziCnam4nNuDrsFhfEMvW3qcoPOM30aTEqcnXDvcoRMs5QyoXQXFS8Xa25tuyVPC0Kzz5BTEMb2OBZmuyYUYzScPYEUfoON7gT0B0P0ToZhfhVtqXzZ2I52BhYMoy4XAVILR+sEWOtIo8Gz+bgedL3DehgpmZ6oh1Ty3YuqU6elthWy/E0zTfm6XnUGsvtK8="
+}'
