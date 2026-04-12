@@ -35,7 +35,7 @@ class AzamPayService
         $token = $this->getToken();
 
         $response = Http::withToken($token)
-            ->post(config('services.azampay.base_url') . '/api/v1/checkout/create', [
+            ->post(config('services.azampay.base_url') . 'api/v1/Partner/PostCheckout', [
                 "merchantAccountNumber" => "1234567890", // weka yako
                 "amount" => $payment->amount,
                 "currency" => "TZS",
