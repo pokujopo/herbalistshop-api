@@ -68,7 +68,7 @@ class AdminDashboardController extends Controller
         $start = now()->subDays(6)->startOfDay();
         $end = now()->endOfDay();
 
-        $rows = Order::selectRaw('DATE(created_at) as date, SUM(total) as total')
+        $rows = Order::selectRaw('TO_CHAR(created_at, 'YYYY-MM-DD') as date, SUM(total) as total')
             ->where('payment_status', 'paid')
             ->whereBetween('created_at', [$start, $end])
             ->groupBy('date')
@@ -122,9 +122,9 @@ class AdminDashboardController extends Controller
     {
         $year = now()->year;
 
-        $rows = Order::selectRaw('MONTH(created_at) as month_number, SUM(total) as total')
+        $rows = Order::selectRaw('EXTRACT(MONTH FROM created_at) as month_number, SUM(total) as total')
             ->where('payment_status', 'paid')
-            ->whereYear('created_at', $year)
+            ->WHERE EXTRACT(YEAR FROM ...) = 2026
             ->groupBy('month_number')
             ->orderBy('month_number')
             ->get()
@@ -147,7 +147,7 @@ class AdminDashboardController extends Controller
         $startYear = now()->year - 4;
         $endYear = now()->year;
 
-        $rows = Order::selectRaw('YEAR(created_at) as year_number, SUM(total) as total')
+        $rows = Order::selectRaw('EXTRACT(YEAR FROM created_at) as year_number, SUM(total) as total')
             ->where('payment_status', 'paid')
             ->whereBetween(DB::raw('YEAR(created_at)'), [$startYear, $endYear])
             ->groupBy('year_number')
