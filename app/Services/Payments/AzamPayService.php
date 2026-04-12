@@ -50,7 +50,7 @@ class AzamPayService
         if (!$response->successful()) {
             return [
                 'status' => 'failed',
-                'message' => 'Payment request failed',
+                'message' => 'Payment request failed' . $response->body(),
                 'raw' => $response->body(),
             ];
         }
