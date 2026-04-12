@@ -135,6 +135,7 @@ class PaymentController extends Controller
                 'checkout_url' => $gatewayResponse['checkout_url'] ?? null,
                 'transaction_reference' => $payment->transaction_reference,
                 'provider_reference' => $payment->provider_reference,
+                'raw' => $gatewayResponse['raw'] ?? null,
             ], 201);
 
         } catch (\Throwable $e) {
