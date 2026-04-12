@@ -50,7 +50,7 @@ return [
     'azampay' => [
     'base_url' => env('AZAMPAY_BASE_URL'),
     'client_id' => env('AZAMPAY_CLIENT_ID'),
-    'client_secret' => "H2FZA7BCoKQtlIdakoCvPqrowvJP3Y7S1QQqpgoyu2CJ582ijkbC+YTRsjwCqDs5iaud3MqbY7nRKR+I1RL09uSWuXl5T45JUonrCqNrMihPssxy//3htDeXzRl7Nz8yb/liJjgopE+Os7ONQSwswkqusB6LQDRpwJfHbYKSHhNEb0UqMYVqoqz+mii0GkXdzYuxLJKbKDSorkhhpwBojC/K+NsiWMiB35ODzbvaD42YW1oY5APwHVnsfIPlwD+Q5sqQO57bBnX21+ET9k846uQWUVeWOEUXPtzBcMabuuQglI+NBAsePGbbhY5qAohrGhxc+pdwhyQrQcQCFtZGBxR5rj43yQvZENBD+hWjEFTy6s7tsfzwNgRw0nduQFFo7gkknG89A60gfQ5Q6BkvZa2czkuv+MuQiJ4sr7+pbS3SLVIk4idsKnVydwlrVMPyUH/iQqbDonl6nYkC10gUkH/7wb3N0y2ElDnJQcPX3zxdziCnam4nNuDrsFhfEMvW3qcoPOM30aTEqcnXDvcoRMs5QyoXQXFS8Xa25tuyVPC0Kzz5BTEMb2OBZmuyYUYzScPYEUfoON7gT0B0P0ToZhfhVtqXzZ2I52BhYMoy4XAVILR+sEWOtIo8Gz+bgedL3DehgpmZ6oh1Ty3YuqU6elthWy/E0zTfm6XnUGsvtK8=",
+    'client_secret' => env('AZAMPAY_CLIENT_SECRET'),
     'app_name' => env('AZAMPAY_APP_NAME'),
 ],
 
