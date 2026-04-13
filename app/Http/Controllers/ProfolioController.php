@@ -43,7 +43,7 @@ class ProfolioController extends Controller
     }
 
     public function get_project(){
-       $profolios = Profolio::withCounts()->limit(8)->get();
+       $projects = Profolio::withCounts()->limit(8)->get();
         return response()->json([
             "status" => 200,
             "all_project" => $projects,
