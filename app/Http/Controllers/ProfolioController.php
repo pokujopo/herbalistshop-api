@@ -35,7 +35,7 @@ class ProfolioController extends Controller
         }
 
         $project_db ->save();
-        return redirect('http://localhost:5173/post_project');
+        return redirect('https://programmingtz.vercel.app/post_project');
         /*return response()->json([
             "status" => 200,
             "message"=> "taarifa zime ifadhiawa kwa db",
