@@ -22,5 +22,10 @@ class Profolio extends Model
         return $this->hasMany(Like::class, 'project_id', 'id');
     }
 
-  
+    // Add this scope to safely get counts
+    public function scopeWithCounts($query){
+        return $query->selectRaw('"profolios".*')
+            ->selectRaw('(select count(*) from "likes" where "profolios"."id"::text = "likes"."project_id"::text) as "like_count"')
+            ->selectRaw('(select count(*) from "views" where "profolios"."id"::text = "views"."project_id"::text) as "view_count"');
+    }
 }
