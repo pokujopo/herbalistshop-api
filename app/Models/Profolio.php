@@ -15,11 +15,11 @@ class Profolio extends Model
     ];
 
     public function view(){
-        return $this->hasMany(View::class, 'project_id');
+        return $this->hasMany(View::class, 'project_id', 'id');
     }
 
     public function like(){
-        return $this->hasMany(Like::class, 'project_id');
+        return $this->hasMany(Like::class, 'project_id', 'id');
     }
 
   
