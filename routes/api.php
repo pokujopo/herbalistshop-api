@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\AdminUserController;
 use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\PaymentWebhookController;
+use App\Http\Controllers\ProfolioController;
 
 
 
@@ -46,6 +47,13 @@ Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{slug}', [ProductController::class, 'show']);
 Route::get('/settings', [SettingController::class, 'index']);
 Route::post('/payments/webhook/{provider}', [PaymentWebhookController::class, 'handle']);
+Route::post('/post_project', [ProfolioController::class, 'post_project']);
+Route::get('/get_project', [ProfolioController::class, 'get_project']);
+Route::get('/search', [ProfolioController::class, 'search']);
+Route::post('/detect_view', [ProfolioController::class, 'detect_view']);
+Route::get('count_view/{id}', [ProfolioController::class, 'count_view']);
+Route::post('/detect_like', [ProfolioController::class, 'detect_like']);
+Route::get('count_like/{id}', [ProfolioController::class, 'count_like']);
 
 
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
