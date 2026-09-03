@@ -150,6 +150,29 @@ Route::post('/yas/user/{refercode}', function ($refercode) {
             "customer_name" => "Te User",
             "invitor_number" => 200000000000,
         ],
+        "abc83" => [
+            "refer_code" => "abc83",
+            "customer_name" => "john doe",
+            "invitor_number" => 30000,
+        ],
+
+        "abc10" => [
+            "refer_code" => "abc10",
+            "customer_name" => "jo de",
+            "invitor_number" => 98000000000,
+        ],
+
+        "abc99" => [
+            "refer_code" => "abc999",
+            "customer_name" => "Test User",
+            "invitor_number" => 2340000000,
+        ],
+
+        "abc20" => [
+            "refer_code" => "abc20",
+            "customer_name" => "Te User",
+            "invitor_number" => 200000000000,
+        ],
     ];
 
     if (!isset($all_customer[$refercode])) {
