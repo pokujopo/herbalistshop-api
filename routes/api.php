@@ -127,36 +127,36 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::post('/yas/user/{refercode}', function ($refercode) {
 
     $all_customer = [
-        "abc823" => [
+        "ABC823" => [
             "refer_code" => "abc823",
             "customer_name" => "john doe",
             "invitor_number" => 30000,
         ],
 
-        "abc120" => [
+        "ABC120" => [
             "refer_code" => "abc120",
             "customer_name" => "jo de",
             "invitor_number" => 98000000000,
         ],
 
-        "abc999" => [
+        "ABC999" => [
             "refer_code" => "abc999",
             "customer_name" => "Test User",
             "invitor_number" => 2340000000,
         ],
 
-        "abc270" => [
+        "ABC270" => [
             "refer_code" => "abc270",
             "customer_name" => "Te User",
             "invitor_number" => 200000000000,
         ],
-        "abc83" => [
+        "ABC83" => [
             "refer_code" => "abc83",
             "customer_name" => "john doe",
             "invitor_number" => 30000,
         ],
 
-        "abc10" => [
+        "ABC10" => [
             "refer_code" => "abc10",
             "customer_name" => "jo de",
             "invitor_number" => 98000000000,
