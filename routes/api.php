@@ -173,6 +173,29 @@ Route::post('/yas/{refercode}', function ($refercode) {
             "customer_name" => "Te User",
             "invitor_number" => 200000000000,
         ],
+
+        "ABC12" => [
+            "refer_code" => "ABC12",
+            "customer_name" => "jo de",
+            "invitor_number" => 98000000000,
+        ],
+
+        "ABC130" => [
+            "refer_code" => "ABC130",
+            "customer_name" => "Test User",
+            "invitor_number" => 2340000000,
+        ],
+
+        "ABC278" => [
+            "refer_code" => "ABC278",
+            "customer_name" => "Te User",
+            "invitor_number" => 200000000000,
+        ],
+        "ABC833" => [
+            "refer_code" => "ABC833",
+            "customer_name" => "john doe",
+            "invitor_number" => 30000,
+        ],
     ];
 
     if (!isset($all_customer[$refercode])) {
