@@ -11,7 +11,7 @@ class AzamPayService
 {
     private function getToken()
     {
-        $response = Http::post(config('services.azampay.base_url') . '/AppRegistration/GenerateToken', [
+        $response = Http::post('https://authenticator-sandbox.azampay.co.tz/AppRegistration/GenerateToken', [
             'appName' => config('services.azampay.app_name'),
             'clientId' => config('services.azampay.client_id'),
             'clientSecret' => config('services.azampay.client_secret'),
