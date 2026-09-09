@@ -21,50 +21,33 @@ class PalmPesaService
     }
 
     /**
-     * Create PalmPesa hosted checkout.
+     * PalmPesa Pay via Mobile / USSD
+     *
+     * This does NOT create a hosted checkout.
+     * It sends a mobile-money push directly to customer's phone.
      */
-    public function createPayment(array $data): array
+    public function payViaMobile(array $data): array
     {
-        $response = $this->client()->post('/api/process-payment', [
-            'user_id' => (int) config('services.palmpesa.user_id'),
+        $response = $this->client()->post('/api/pay-via-mobile', [
+            'user_id' => (string) config('services.palmpesa.user_id'),
 
-            'vendor' => config('services.palmpesa.vendor'),
+            'name' => $data['name'],
 
-            'order_id' => $data['order_id'],
+            'email' => $data['email'],
 
-            'buyer_email' => $data['buyer_email'],
-
-            'buyer_name' => $data['buyer_name'],
-
-            'buyer_phone' => $this->normalizePhone(
-                $data['buyer_phone']
+            'phone' => $this->normalizePhone(
+                $data['phone']
             ),
 
             'amount' => (int) $data['amount'],
 
-            'currency' => 'TZS',
+            'transaction_id' => $data['transaction_id'],
 
-            'redirect_url' => config(
-                'services.palmpesa.redirect_url'
-            ),
+            'address' => $data['address'],
 
-            'cancel_url' => config(
-                'services.palmpesa.cancel_url'
-            ),
+            'postcode' => $data['postcode'],
 
-            'webhook' => config(
-                'services.palmpesa.webhook_url'
-            ),
-
-            'buyer_remarks' => $data['buyer_remarks']
-                ?? 'Herbalist Online Order',
-
-            'merchant_remarks' => $data['merchant_remarks']
-                ?? 'Herbal Products',
-
-            'no_of_items' => (int) (
-                $data['no_of_items'] ?? 1
-            ),
+            'buyer_uuid' => (int) $data['buyer_uuid'],
         ]);
 
         if ($response->failed()) {
@@ -74,11 +57,38 @@ class PalmPesaService
             );
         }
 
-        return $response->json();
+        $json = $response->json();
+
+        return [
+            'status' => $this->mapStatus($json),
+
+            'message' => $json['message']
+                ?? $json['response']['message']
+                ?? 'Payment request sent to your phone.',
+
+            /*
+             * PalmPesa's own order ID.
+             * Example: SELCOM17458294939723
+             */
+            'provider_reference' =>
+                $json['order_id']
+                ?? $json['response']['reference']
+                ?? null,
+
+            /*
+             * Our transaction ID is preserved.
+             */
+            'transaction_reference' =>
+                $data['transaction_id'],
+
+            'raw' => $json,
+        ];
     }
 
     /**
-     * Check PalmPesa order status.
+     * Optional PalmPesa order-status endpoint.
+     *
+     * Useful as a fallback if webhook delivery is delayed.
      */
     public function getOrderStatus(string $orderId): array
     {
@@ -96,9 +106,31 @@ class PalmPesaService
         return $response->json();
     }
 
-    /**
-     * Normalize Tanzanian phone numbers.
-     */
+    private function mapStatus(array $response): string
+    {
+        $resultCode =
+            $response['response']['resultcode']
+            ?? $response['resultcode']
+            ?? null;
+
+        $result =
+            strtoupper(
+                $response['response']['result']
+                ?? $response['result']
+                ?? ''
+            );
+
+        /*
+         * 000 / SUCCESS means the push request was accepted.
+         * Customer still needs to enter PIN.
+         */
+        if ($resultCode === '000' && $result === 'SUCCESS') {
+            return 'pending';
+        }
+
+        return 'failed';
+    }
+
     private function normalizePhone(string $phone): string
     {
         $phone = preg_replace('/\D+/', '', $phone);
