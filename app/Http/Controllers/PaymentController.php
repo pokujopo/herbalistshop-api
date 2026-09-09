@@ -2,96 +2,127 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Order;
+use App\Services\Payments\PalmPesaService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Throwable;
 
 class PaymentController extends Controller
 {
-    // ✅ 1. Get Access Token
-    private function getAccessToken()
-{
-    $url = 'https://sandbox.azampay.co.tz/api/v1/Authentication/GenerateToken';
-
-    $credentials = [
-        'appName' => env('AZAMPAY_APP_NAME'),
-        'clientId' => env('AZAMPAY_CLIENT_ID'),
-        'clientSecret' => env('AZAMPAY_CLIENT_SECRET'),
-    ];
-
-    // Tuma request kwa kutumia JSON body
-    $response = Http::withHeaders([
-        'Content-Type' => 'application/json', // Muhimu: Weka Content-Type
-    ])->post($url, $credentials); // Laravel itabadilisha array hii kuwa JSON
-
-    if ($response->successful()) {
-        // Angalia structure sahihi ya response. Inatakiwa kurejesha 'access_token' au 'accessToken'?
-        return $response->json()['data']['accessToken'] ?? null; 
-    }
-    
-    // Debugging: Toa ujumbe kamili wa kosa.
-    if ($response->failed()) {
-        logger('AzamPay Token Error: ' . $response->status());
-        logger('AzamPay Response Body: ' . $response->body());
+    public function __construct(
+        private readonly PalmPesaService $palmPesa
+    ) {
     }
 
-    return null;
-}
-
-    // ✅ 2. Send Payment Request
-    public function initiatePayment(Request $request)
+    /**
+     * Start PalmPesa checkout.
+     */
+    public function initiate(Request $request): JsonResponse
     {
-        $accessToken = $this->getAccessToken();
-        if (!$accessToken) {
-            return response()->json(['error' => 'Failed to get access token'], 400);
+        $validated = $request->validate([
+            'order_id' => [
+                'required',
+                'integer',
+                'exists:orders,id',
+            ],
+        ]);
+
+        $order = Order::query()
+            ->with('user')
+            ->findOrFail($validated['order_id']);
+
+        if (
+            $order->payment_status === 'paid'
+        ) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This order has already been paid.',
+            ], 422);
         }
 
-        $url = env('AZAMPAY_BASE_URL') . '/api/v1/Payment/RequestPayment';
-        $payload = [
-            'accountNumber' => $request->phone_number,   // e.g. 255712345678
-            'amount' => $request->amount,                // e.g. 1000
-            'currency' => 'TZS',
-            'merchant' => env('AZAMPAY_MERCHANT_ID'),
-            'externalReference' => 'ORDER-' . uniqid(),
-            'callbackUrl' => env('AZAMPAY_CALLBACK_URL'),
-        ];
+        $paymentOrderId = 'ORD-' . strtoupper(
+            Str::random(10)
+        );
 
-        $response = Http::withToken($accessToken)
-            ->acceptJson()
-            ->post($url, $payload);
+        try {
+            $response = $this->palmPesa->createPayment([
+                'order_id' => $paymentOrderId,
 
-        if ($response->successful()) {
-            return response()->json([
-                'message' => 'Payment request sent successfully',
-                'data' => $response->json(),
+                'buyer_name' => $order->user?->name
+                    ?? $order->customer_name,
+
+                'buyer_email' => $order->user?->email
+                    ?? $order->customer_email,
+
+                'buyer_phone' => $order->customer_phone,
+
+                'amount' => $order->total,
+
+                'no_of_items' => $order->items()->count(),
+
+                'buyer_remarks' =>
+                    'Herbalist Order ' . $order->order_number,
+
+                'merchant_remarks' =>
+                    'Herbal Products Order',
             ]);
-        } else {
+
+            $checkoutUrl =
+                data_get(
+                    $response,
+                    'raw.payment_gateway_url'
+                );
+
+            if (!$checkoutUrl) {
+                Log::error(
+                    'PalmPesa missing checkout URL',
+                    [
+                        'order_id' => $order->id,
+                        'response' => $response,
+                    ]
+                );
+
+                return response()->json([
+                    'success' => false,
+                    'message' =>
+                        'PalmPesa did not return a checkout URL.',
+                ], 502);
+            }
+
+            $order->update([
+                'payment_status' => 'pending',
+                'payment_provider' => 'palmpesa',
+                'payment_reference' => $paymentOrderId,
+            ]);
+
             return response()->json([
-                'error' => 'Failed to initiate payment',
-                'response' => $response->json(),
-            ], 400);
+                'success' => true,
+                'message' => 'Payment initialized.',
+                'order_number' => $order->order_number,
+                'payment_status' => 'pending',
+                'checkout_url' => $checkoutUrl,
+                'transaction_reference' => $paymentOrderId,
+            ]);
+
+        } catch (Throwable $e) {
+
+            Log::error(
+                'PalmPesa payment initialization failed',
+                [
+                    'order_id' => $order->id,
+                    'error' => $e->getMessage(),
+                ]
+            );
+
+            return response()->json([
+                'success' => false,
+                'message' =>
+                    'Unable to initialize payment.',
+            ], 502);
         }
-    }
-
-    // ✅ 3. Handle Callback (Webhook)
-    public function handleCallback(Request $request)
-    {
-        Log::info('AzamPay Callback Received:', $request->all());
-
-        // Example response:
-        // {
-        //   "status": "COMPLETED",
-        //   "transactionId": "AZM123456",
-        //   "amount": 1000
-        // }
-
-        if ($request->status === 'COMPLETED') {
-            // Update order/payment record in DB
-            // Example:
-            // Payment::where('reference', $request->externalReference)
-            //     ->update(['status' => 'completed']);
-        }
-
-        return response()->json(['message' => 'Callback received']);
     }
 }
