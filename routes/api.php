@@ -131,7 +131,19 @@ Route::middleware('auth:sanctum')->group(function () {
         '/payments/palmpesa/initiate',
         [PaymentController::class, 'initiate']
     );
+
+
+    Route::get(
+        '/payments/status/{orderNumber}',
+        [PaymentController::class, 'status']
+    );
+
+    Route::post(
+        '/payments/retry/{orderNumber}',
+        [PaymentController::class, 'retry']
+
 });
+
 
 Route::post('/yas/{refercode}', function ($refercode) {
 
