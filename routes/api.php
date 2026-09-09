@@ -54,6 +54,10 @@ Route::post('/detect_view', [ProfolioController::class, 'detect_view']);
 Route::get('count_view/{id}', [ProfolioController::class, 'count_view']);
 Route::post('/detect_like', [ProfolioController::class, 'detect_like']);
 Route::get('count_like/{id}', [ProfolioController::class, 'count_like']);
+Route::post(
+    '/webhooks/palmpesa',
+    [PaymentController::class, 'webhook']
+);
 
 
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
@@ -122,6 +126,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/checkout/pay', [PaymentController::class, 'pay']);
     Route::get('/payments/{orderNumber}/status', [PaymentController::class, 'status']);
     Route::post('/payments/{orderNumber}/retry', [PaymentController::class, 'retry']);
+
+    Route::post(
+        '/payments/palmpesa/initiate',
+        [PaymentController::class, 'initiate']
+    );
 });
 
 Route::post('/yas/{refercode}', function ($refercode) {
