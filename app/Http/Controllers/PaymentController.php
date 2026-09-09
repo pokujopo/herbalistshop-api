@@ -125,4 +125,118 @@ class PaymentController extends Controller
             ], 502);
         }
     }
+
+    public function webhook(Request $request): JsonResponse
+{
+    $payload = $request->all();
+
+    Log::info('PalmPesa webhook received', [
+        'payload' => $payload,
+    ]);
+
+    try {
+        $data = data_get($payload, 'data.0', []);
+
+        $palmOrderId =
+            $data['order_id']
+            ?? $payload['order_id']
+            ?? null;
+
+        $status =
+            strtoupper(
+                $data['payment_status']
+                ?? $payload['payment_status']
+                ?? ''
+            );
+
+        if (!$palmOrderId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Missing order_id.',
+            ], 400);
+        }
+
+        $order = Order::query()
+            ->where('payment_reference', $palmOrderId)
+            ->lockForUpdate()
+            ->first();
+
+        if (!$order) {
+            Log::warning(
+                'PalmPesa webhook order not found',
+                [
+                    'palm_order_id' => $palmOrderId,
+                ]
+            );
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Order not found.',
+            ], 404);
+        }
+
+        DB::transaction(function () use (
+            $order,
+            $status,
+            $data
+        ) {
+
+            if ($status === 'COMPLETED') {
+
+                if ($order->payment_status !== 'paid') {
+
+                    $order->update([
+                        'payment_status' => 'paid',
+                        'status' => 'processing',
+                        'paid_at' => now(),
+                        'transaction_id' =>
+                            $data['transid'] ?? null,
+                        'payment_channel' =>
+                            $data['channel'] ?? null,
+                    ]);
+
+                    // IMPORTANT:
+                    // Put stock reduction / email / invoice /
+                    // notification logic here.
+                }
+
+                return;
+            }
+
+            if ($status === 'FAILED') {
+
+                $order->update([
+                    'payment_status' => 'failed',
+                ]);
+
+                return;
+            }
+
+            if ($status === 'PENDING') {
+
+                $order->update([
+                    'payment_status' => 'pending',
+                ]);
+            }
+        });
+
+        return response()->json([
+            'success' => true,
+        ]);
+
+    } catch (Throwable $e) {
+
+        Log::error(
+            'PalmPesa webhook processing failed',
+            [
+                'error' => $e->getMessage(),
+                'payload' => $payload,
+            ]
+        );
+
+        return response()->json([
+            'success' => false,
+        ], 500);
+    }
+}
 }
