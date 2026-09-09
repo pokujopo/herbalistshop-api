@@ -58,6 +58,10 @@ Route::post(
     '/webhooks/palmpesa',
     [PaymentController::class, 'webhook']
 );
+Route::post(
+    '/payment/webhook/{provider}',
+    [PaymentWebhookController::class, 'handle']
+);
 
 
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
