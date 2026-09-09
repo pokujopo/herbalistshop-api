@@ -54,4 +54,23 @@ return [
     'app_name' => env('AZAMPAY_APP_NAME'),
 ],
 
+'palmpesa' => [
+    'base_url' => env(
+        'PALMPESA_BASE_URL',
+        'https://palmpesa.drmlelwa.co.tz'
+    ),
+
+    'api_token' => env('PALMPESA_API_TOKEN'),
+
+    'user_id' => env('PALMPESA_USER_ID'),
+
+    'vendor' => env('PALMPESA_VENDOR'),
+
+    'webhook_url' => env('PALMPESA_WEBHOOK_URL'),
+
+    'redirect_url' => env('PALMPESA_REDIRECT_URL'),
+
+    'cancel_url' => env('PALMPESA_CANCEL_URL'),
+],
+
 ];
