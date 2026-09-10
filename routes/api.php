@@ -144,7 +144,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post(
         '/payments/retry/{orderNumber}',
-        [PaymentController::class, 'retry']
+        [PaymentController::class, 'retry'] 
+        );
 
 });
 
