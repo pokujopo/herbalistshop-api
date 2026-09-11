@@ -56,32 +56,28 @@ return [
 
 'palmpesa' => [
 
-    'base_url' => env(
-        'PALMPESA_BASE_URL',
-        'https://palmpesa.drmlelwa.co.tz'
-    ),
+    'base_url' =>
+        env(
+            'PALMPESA_BASE_URL',
+            'https://palmpesa.drmlelwa.co.tz'
+        ),
 
-    'api_token' => env(
-        'PALMPESA_API_TOKEN'
-    ),
+    'api_token' =>
+        env('PALMPESA_API_TOKEN'),
 
-    'user_id' => env(
-        'PALMPESA_USER_ID'
-    ),
+    'user_id' =>
+        env('PALMPESA_USER_ID'),
 
-    /*
-     * Required by PalmPesa.
-     *
-     * Checkout UI doesn't need postcode.
-     */
-    'postcode' => env(
-        'PALMPESA_POSTCODE',
-        '00000'
-    ),
+    'postcode' =>
+        env(
+            'PALMPESA_POSTCODE',
+            '00000'
+        ),
 
-    'webhook_url' => env(
-        'PALMPESA_WEBHOOK_URL'
-    ),
+    'callback_url' =>
+        env(
+            'PALMPESA_CALLBACK_URL'
+        ),
 ],
 
 ];
