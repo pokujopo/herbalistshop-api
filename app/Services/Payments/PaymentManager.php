@@ -3,6 +3,7 @@
 namespace App\Services\Payments;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use RuntimeException;
 
 class PaymentManager
@@ -15,10 +16,14 @@ class PaymentManager
     /**
      * Start payment.
      */
-    public function initiate(string $provider, array $data): array
-    {
+    public function initiate(
+        string $provider,
+        array $data
+    ): array {
         return match ($provider) {
-            'palmpesa' => $this->initiatePalmPesa($data),
+
+            'palmpesa' =>
+                $this->initiatePalmPesa($data),
 
             'cash' => [
                 'status' => 'pending',
@@ -31,60 +36,79 @@ class PaymentManager
         };
     }
 
-    private function initiatePalmPesa(array $data): array
-    {
+    private function initiatePalmPesa(
+        array $data
+    ): array {
         $payment = $data['payment'];
         $order = $data['order'];
 
         $user = $order->user;
+        $address = $order->address;
 
+        /*
+         * Generate our own unique transaction ID.
+         *
+         * This is NOT PalmPesa's order_id.
+         */
         $transactionId =
             $payment->transaction_reference
             ?? 'TXN-' . strtoupper(
-                \Illuminate\Support\Str::random(16)
+                Str::random(16)
             );
 
         /*
-         * Save our transaction ID before sending request.
+         * Save our transaction ID BEFORE
+         * contacting PalmPesa.
          */
         $payment->update([
-            'transaction_reference' => $transactionId,
+            'transaction_reference' =>
+                $transactionId,
         ]);
 
-        $address = $order->address;
+        return $this->palmPesa->initiate([
+            'name' =>
+                $address->full_name,
 
-        return $this->palmPesa->payViaMobile([
-            'name' => $address->full_name,
+            'email' =>
+                $user->email,
 
-            'email' => $user->email,
+            'phone' =>
+                $payment->phone,
 
-            'phone' => $payment->phone,
+            'amount' =>
+                (int) $payment->amount,
 
-            'amount' => $payment->amount,
+            'transaction_id' =>
+                $transactionId,
 
-            'transaction_id' => $transactionId,
-
-            'address' => implode(', ', array_filter([
-                $address->street_address,
-                $address->city,
-                $address->region,
-            ])),
+            'address' =>
+                implode(', ', array_filter([
+                    $address->street_address,
+                    $address->city,
+                    $address->region,
+                ])),
 
             /*
-             * PalmPesa requires postcode but your current
-             * checkout UI doesn't ask for one.
+             * PalmPesa requires postcode.
              *
-             * Therefore keep it in backend configuration.
+             * UI does not currently collect it,
+             * so keep it in backend config.
              */
-            'postcode' => config(
-                'services.palmpesa.postcode',
-                '00000'
-            ),
+            'postcode' =>
+                config(
+                    'services.palmpesa.postcode',
+                    '00000'
+                ),
 
             /*
-             * Unique buyer ID in our system.
+             * IMPORTANT:
+             * This is the webhook URL PalmPesa
+             * will call after payment status changes.
              */
-            'buyer_uuid' => $user->id,
+            'callback_url' =>
+                config(
+                    'services.palmpesa.callback_url'
+                ),
         ]);
     }
 
@@ -96,13 +120,15 @@ class PaymentManager
         Request $request
     ) {
         return match ($provider) {
+
             'palmpesa' => app(
                 PalmPesaWebhookService::class
             )->handle($request),
 
             default => response()->json([
                 'success' => false,
-                'message' => "Unsupported provider: {$provider}",
+                'message' =>
+                    "Unsupported provider: {$provider}",
             ], 400),
         };
     }
