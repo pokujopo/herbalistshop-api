@@ -2,6 +2,7 @@
 
 namespace App\Services\Payments;
 
+use App\Models\Cart;
 use App\Models\Order;
 use App\Models\Payment;
 use Illuminate\Http\Request;
@@ -14,240 +15,289 @@ class PalmPesaWebhookService
     {
         $payload = $request->all();
 
-        Log::info('PalmPesa webhook received', [
-            'payload' => $payload,
-        ]);
+        Log::info(
+            'PalmPesa webhook received',
+            [
+                'payload' => $payload,
+            ]
+        );
 
         /*
-         * PalmPesa responses can be nested.
-         * We try the common locations.
+         * PalmPesa callback:
+         *
+         * {
+         *   "order_id": "PALMPESA...",
+         *   "payment_status": "COMPLETED"
+         * }
          */
-        $data = $payload['data'][0]
-            ?? $payload['data']
-            ?? $payload['response']
-            ?? $payload;
-
-        if (!is_array($data)) {
-            $data = $payload;
-        }
-
-        $transactionId =
-            $data['transaction_id']
-            ?? $data['transactionId']
-            ?? $data['transid']
-            ?? $payload['transaction_id']
-            ?? $payload['transactionId']
-            ?? null;
 
         $providerReference =
-            $data['order_id']
-            ?? $data['orderId']
-            ?? $payload['order_id']
-            ?? $payload['orderId']
+            $payload['order_id']
             ?? null;
 
-        $status =
-            strtoupper(
-                $data['payment_status']
-                ?? $data['status']
-                ?? $data['result']
-                ?? $payload['payment_status']
-                ?? $payload['status']
-                ?? ''
+        $status = strtoupper(
+            $payload['payment_status']
+            ?? ''
+        );
+
+        if (!$providerReference) {
+            Log::warning(
+                'PalmPesa webhook missing order_id',
+                [
+                    'payload' => $payload,
+                ]
             );
 
-        $resultCode =
-            (string) (
-                $data['resultcode']
-                ?? $data['result_code']
-                ?? $payload['resultcode']
-                ?? ''
+            return response()->json([
+                'success' => false,
+                'message' =>
+                    'order_id is required.',
+            ], 400);
+        }
+
+        if (!in_array(
+            $status,
+            [
+                'PENDING',
+                'COMPLETED',
+                'FAILED',
+            ],
+            true
+        )) {
+            Log::warning(
+                'PalmPesa webhook unknown status',
+                [
+                    'status' => $status,
+                    'payload' => $payload,
+                ]
             );
 
-        /*
-         * Find payment using our transaction ID first.
-         */
-        $payment = null;
-
-        if ($transactionId) {
-            $payment = Payment::where(
-                'transaction_reference',
-                $transactionId
-            )->first();
+            return response()->json([
+                'success' => false,
+                'message' =>
+                    'Unknown payment status.',
+            ], 422);
         }
 
         /*
-         * Fallback to PalmPesa reference.
+         * Find payment using PalmPesa order ID.
          */
-        if (!$payment && $providerReference) {
-            $payment = Payment::where(
-                'provider_reference',
-                $providerReference
-            )->first();
-        }
+        $payment = Payment::where(
+            'provider_reference',
+            $providerReference
+        )->first();
 
         if (!$payment) {
-            Log::warning('PalmPesa webhook payment not found', [
-                'transaction_id' => $transactionId,
-                'provider_reference' => $providerReference,
-                'payload' => $payload,
-            ]);
+
+            Log::warning(
+                'PalmPesa payment not found',
+                [
+                    'provider_reference' =>
+                        $providerReference,
+                    'payload' =>
+                        $payload,
+                ]
+            );
 
             /*
-             * Return 200 so PalmPesa doesn't repeatedly send
-             * an unknown webhook forever.
+             * Return 200 so provider does not
+             * keep retrying an unknown payment.
              */
             return response()->json([
                 'success' => false,
-                'message' => 'Payment not found.',
+                'message' =>
+                    'Payment not found.',
             ], 200);
         }
 
         /*
-         * IMPORTANT:
-         * Do not process the same successful webhook twice.
+         * Idempotency:
+         *
+         * If already paid, do nothing.
          */
-        if ($payment->status === 'paid') {
+        if (
+            $payment->status === 'paid'
+        ) {
             return response()->json([
                 'success' => true,
-                'message' => 'Payment already processed.',
+                'message' =>
+                    'Payment already processed.',
             ]);
         }
 
-        $paymentStatus = $this->resolveStatus(
-            $status,
-            $resultCode
-        );
+        /*
+         * PENDING
+         */
+        if ($status === 'PENDING') {
 
-        DB::transaction(function () use (
-            $payment,
-            $providerReference,
-            $payload,
-            $paymentStatus
-        ) {
             $payment->update([
-                'provider_reference' =>
-                    $providerReference
-                    ?? $payment->provider_reference,
-
-                'status' => $paymentStatus,
+                'status' => 'pending',
 
                 'message' =>
-                    $payload['message']
-                    ?? $payload['response']['message']
-                    ?? $payment->message,
+                    'Payment is still pending.',
 
-                'raw_response' => json_encode(
-                    $payload,
-                    JSON_UNESCAPED_SLASHES
-                ),
+                'raw_response' =>
+                    json_encode(
+                        $payload,
+                        JSON_UNESCAPED_SLASHES
+                    ),
             ]);
 
-            $order = Order::lockForUpdate()
-                ->find($payment->order_id);
+            return response()->json([
+                'success' => true,
+                'message' =>
+                    'Payment still pending.',
+            ]);
+        }
 
-            if (!$order) {
-                return;
-            }
-
-            if ($paymentStatus === 'paid') {
-
-                $order->update([
-                    'payment_status' => 'paid',
-                    'order_status' => 'processing',
-                    'paid_at' => now(),
-                ]);
+        DB::transaction(
+            function () use (
+                $payment,
+                $status,
+                $payload
+            ) {
 
                 /*
-                 * Reduce stock ONLY after successful payment.
+                 * Lock payment.
                  */
-                foreach ($order->items as $item) {
-                    $product = $item->product;
+                $payment = Payment::lockForUpdate()
+                    ->find($payment->id);
 
-                    if (!$product) {
-                        continue;
-                    }
+                /*
+                 * Another webhook may have
+                 * completed it while this one
+                 * was waiting.
+                 */
+                if (
+                    $payment->status === 'paid'
+                ) {
+                    return;
+                }
 
-                    /*
-                     * Prevent stock from becoming negative.
-                     */
-                    $quantity = min(
-                        $item->quantity,
-                        $product->stock
-                    );
+                $order = Order::lockForUpdate()
+                    ->find($payment->order_id);
 
-                    $product->decrement(
-                        'stock',
-                        $quantity
-                    );
-
-                    $product->refresh();
-
-                    $product->is_in_stock =
-                        $product->stock > 0;
-
-                    $product->save();
+                if (!$order) {
+                    return;
                 }
 
                 /*
-                 * Delete user's cart only after successful payment.
+                 * COMPLETED
                  */
-                if ($order->user_id) {
-                    $cart = \App\Models\Cart::where(
+                if ($status === 'COMPLETED') {
+
+                    $payment->update([
+                        'status' => 'paid',
+
+                        'message' =>
+                            'Payment completed successfully.',
+
+                        'paid_at' =>
+                            now(),
+
+                        'raw_response' =>
+                            json_encode(
+                                $payload,
+                                JSON_UNESCAPED_SLASHES
+                            ),
+                    ]);
+
+                    $order->update([
+                        'payment_status' =>
+                            'paid',
+
+                        'order_status' =>
+                            'processing',
+
+                        'paid_at' =>
+                            now(),
+                    ]);
+
+                    /*
+                     * Reduce stock only once
+                     * after successful payment.
+                     */
+                    foreach (
+                        $order->items as $item
+                    ) {
+
+                        $product =
+                            $item->product;
+
+                        if (!$product) {
+                            continue;
+                        }
+
+                        $quantity = min(
+                            $item->quantity,
+                            $product->stock
+                        );
+
+                        if ($quantity > 0) {
+
+                            $product->decrement(
+                                'stock',
+                                $quantity
+                            );
+                        }
+
+                        $product->refresh();
+
+                        $product->update([
+                            'is_in_stock' =>
+                                $product->stock > 0,
+                        ]);
+                    }
+
+                    /*
+                     * Clear cart only after
+                     * successful payment.
+                     */
+                    $cart = Cart::where(
                         'user_id',
                         $order->user_id
                     )->first();
 
-                    $cart?->items()->delete();
+                    if ($cart) {
+                        $cart->items()->delete();
+                    }
+
+                    return;
                 }
 
-            } elseif ($paymentStatus === 'failed') {
+                /*
+                 * FAILED
+                 */
+                if ($status === 'FAILED') {
 
-                $order->update([
-                    'payment_status' => 'failed',
-                ]);
+                    $payment->update([
+                        'status' => 'failed',
+
+                        'message' =>
+                            'PalmPesa payment failed.',
+
+                        'raw_response' =>
+                            json_encode(
+                                $payload,
+                                JSON_UNESCAPED_SLASHES
+                            ),
+                    ]);
+
+                    $order->update([
+                        'payment_status' =>
+                            'failed',
+
+                        'order_status' =>
+                            'pending',
+                    ]);
+                }
             }
-        });
+        );
 
         return response()->json([
             'success' => true,
-            'message' => 'Webhook processed successfully.',
+            'message' =>
+                'Webhook processed successfully.',
         ]);
-    }
-
-    private function resolveStatus(
-        string $status,
-        string $resultCode
-    ): string {
-        $paidStatuses = [
-            'PAID',
-            'SUCCESSFUL',
-            'COMPLETED',
-            'SUCCESS',
-        ];
-
-        $failedStatuses = [
-            'FAILED',
-            'FAIL',
-            'CANCELLED',
-            'CANCELED',
-            'DECLINED',
-            'EXPIRED',
-        ];
-
-        if (
-            in_array($status, $paidStatuses, true)
-            && $resultCode !== '999'
-        ) {
-            return 'paid';
-        }
-
-        if (
-            in_array($status, $failedStatuses, true)
-        ) {
-            return 'failed';
-        }
-
-        return 'pending';
     }
 }
