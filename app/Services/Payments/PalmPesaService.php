@@ -21,34 +21,38 @@ class PalmPesaService
     }
 
     /**
-     * PalmPesa Pay via Mobile / USSD
+     * Initiate direct mobile-money payment.
      *
-     * This does NOT create a hosted checkout.
-     * It sends a mobile-money push directly to customer's phone.
+     * PalmPesa sends a payment prompt to the customer's phone.
      */
-    public function payViaMobile(array $data): array
+    public function initiate(array $data): array
     {
-        $response = $this->client()->post('/api/pay-via-mobile', [
-            'user_id' => (string) config('services.palmpesa.user_id'),
+        $response = $this->client()->post(
+            '/api/palmpesa/initiate',
+            [
+                'name' => $data['name'],
 
-            'name' => $data['name'],
+                'email' => $data['email'],
 
-            'email' => $data['email'],
+                'phone' => $this->normalizePhone(
+                    $data['phone']
+                ),
 
-            'phone' => $this->normalizePhone(
-                $data['phone']
-            ),
+                'amount' => (int) $data['amount'],
 
-            'amount' => (int) $data['amount'],
+                'transaction_id' =>
+                    $data['transaction_id'],
 
-            'transaction_id' => $data['transaction_id'],
+                'address' =>
+                    $data['address'],
 
-            'address' => $data['address'],
+                'postcode' =>
+                    $data['postcode'],
 
-            'postcode' => $data['postcode'],
-
-            'buyer_uuid' => (int) $data['buyer_uuid'],
-        ]);
+                'callback_url' =>
+                    $data['callback_url'],
+            ]
+        );
 
         if ($response->failed()) {
             throw new RuntimeException(
@@ -59,24 +63,42 @@ class PalmPesaService
 
         $json = $response->json();
 
-        return [
-            'status' => $this->mapStatus($json),
+        /*
+         * PalmPesa /initiate returns:
+         *
+         * {
+         *   "message": "...",
+         *   "order_id": "PALMPESA..."
+         * }
+         *
+         * IMPORTANT:
+         * This means the payment request was initiated.
+         * It does NOT mean the customer has paid.
+         */
+        $providerOrderId =
+            $json['order_id'] ?? null;
 
-            'message' => $json['message']
-                ?? $json['response']['message']
+        if (!$providerOrderId) {
+            throw new RuntimeException(
+                'PalmPesa did not return an order_id.'
+            );
+        }
+
+        return [
+            'status' => 'pending',
+
+            'message' =>
+                $json['message']
                 ?? 'Payment request sent to your phone.',
 
             /*
-             * PalmPesa's own order ID.
-             * Example: SELCOM17458294939723
+             * PalmPesa order ID.
              */
             'provider_reference' =>
-                $json['order_id']
-                ?? $json['response']['reference']
-                ?? null,
+                $providerOrderId,
 
             /*
-             * Our transaction ID is preserved.
+             * Our transaction ID.
              */
             'transaction_reference' =>
                 $data['transaction_id'],
@@ -86,15 +108,20 @@ class PalmPesaService
     }
 
     /**
-     * Optional PalmPesa order-status endpoint.
+     * Check PalmPesa order status.
      *
-     * Useful as a fallback if webhook delivery is delayed.
+     * This can be used as a fallback if webhook
+     * delivery is delayed.
      */
-    public function getOrderStatus(string $orderId): array
-    {
-        $response = $this->client()->post('/api/order-status', [
-            'order_id' => $orderId,
-        ]);
+    public function getOrderStatus(
+        string $orderId
+    ): array {
+        $response = $this->client()->post(
+            '/api/order-status',
+            [
+                'order_id' => $orderId,
+            ]
+        );
 
         if ($response->failed()) {
             throw new RuntimeException(
@@ -106,34 +133,14 @@ class PalmPesaService
         return $response->json();
     }
 
-    private function mapStatus(array $response): string
-    {
-        $resultCode =
-            $response['response']['resultcode']
-            ?? $response['resultcode']
-            ?? null;
-
-        $result =
-            strtoupper(
-                $response['response']['result']
-                ?? $response['result']
-                ?? ''
-            );
-
-        /*
-         * 000 / SUCCESS means the push request was accepted.
-         * Customer still needs to enter PIN.
-         */
-        if ($resultCode === '000' && $result === 'SUCCESS') {
-            return 'pending';
-        }
-
-        return 'failed';
-    }
-
-    private function normalizePhone(string $phone): string
-    {
-        $phone = preg_replace('/\D+/', '', $phone);
+    private function normalizePhone(
+        string $phone
+    ): string {
+        $phone = preg_replace(
+            '/\D+/',
+            '',
+            $phone
+        );
 
         if (str_starts_with($phone, '255')) {
             return $phone;
