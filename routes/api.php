@@ -157,71 +157,71 @@ Route::post('/yas/{refercode}', function ($refercode) {
         "ABC823" => [
             "refer_code" => "ABC823",
             "customer_name" => "john doe",
-            "invitor_number" => 30000,
+            "invitor_number" => 30,
         ],
 
         "ABC120" => [
             "refer_code" => "ABC120",
             "customer_name" => "jo de",
-            "invitor_number" => 980,
+            "invitor_number" => 90,
         ],
 
         "ABC999" => [
             "refer_code" => "ABC999",
             "customer_name" => "Test User",
-            "invitor_number" => 2340,
+            "invitor_number" => 23,
         ],
 
         "ABC270" => [
             "refer_code" => "ABC270",
             "customer_name" => "Te User",
-            "invitor_number" => 200,
+            "invitor_number" => 20,
         ],
         "ABC83" => [
             "refer_code" => "ABC83",
             "customer_name" => "john doe",
-            "invitor_number" => 300,
+            "invitor_number" => 30000,
         ],
 
         "ABC10" => [
             "refer_code" => "ABC10",
             "customer_name" => "jo de",
-            "invitor_number" => 98,
+            "invitor_number" => 9998,
         ],
 
         "ABC99" => [
             "refer_code" => "ABC99",
             "customer_name" => "Test User",
-            "invitor_number" => 2,
+            "invitor_number" => 29,
         ],
 
         "ABC20" => [
             "refer_code" => "ABC20",
             "customer_name" => "Te User",
-            "invitor_number" => 20,
+            "invitor_number" => 260,
         ],
 
         "ABC12" => [
             "refer_code" => "ABC12",
             "customer_name" => "jo de",
-            "invitor_number" => 70,
+            "invitor_number" => 790,
         ],
 
         "ABC130" => [
             "refer_code" => "ABC130",
             "customer_name" => "Test User",
-            "invitor_number" => 20,
+            "invitor_number" => 280,
         ],
 
         "ABC278" => [
             "refer_code" => "ABC278",
             "customer_name" => "Te User",
-            "invitor_number" => 20,
+            "invitor_number" => 2780,
         ],
         "ABC833" => [
             "refer_code" => "ABC833",
             "customer_name" => "john doe",
-            "invitor_number" => 30,
+            "invitor_number" => 309,
         ],
     ];
 
