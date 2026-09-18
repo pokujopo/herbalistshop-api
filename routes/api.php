@@ -223,6 +223,66 @@ Route::post('/yas/{refercode}', function ($refercode) {
             "customer_name" => "john doe",
             "invitor_number" => 309,
         ],
+
+        //test code
+
+        "ABC939" => [
+            "refer_code" => "ABC939",
+            "customer_name" => "Test User",
+            "invitor_number" => 23,
+        ],
+
+        "ABC470" => [
+            "refer_code" => "ABC470",
+            "customer_name" => "Te User",
+            "invitor_number" => 298770,
+        ],
+        "ABC843" => [
+            "refer_code" => "ABC843",
+            "customer_name" => "john doe",
+            "invitor_number" => 30,
+        ],
+
+        "ABC170" => [
+            "refer_code" => "ABC170",
+            "customer_name" => "jo de",
+            "invitor_number" => 98,
+        ],
+
+        "ABC979" => [
+            "refer_code" => "ABC979",
+            "customer_name" => "Test User",
+            "invitor_number" => 239,
+        ],
+
+        "ABC45" => [
+            "refer_code" => "ABC45",
+            "customer_name" => "Te User",
+            "invitor_number" => 200000,
+        ],
+
+        "WER623" => [
+            "refer_code" => "WER623",
+            "customer_name" => "jo de",
+            "invitor_number" => 790,
+        ],
+
+        "WER689" => [
+            "refer_code" => "WER689",
+            "customer_name" => "Test User",
+            "invitor_number" => 280,
+        ],
+
+        "WER676" => [
+            "refer_code" => "WER676",
+            "customer_name" => "Te User",
+            "invitor_number" => 2780,
+        ],
+        "WER678" => [
+            "refer_code" => "WER678",
+            "customer_name" => "john doe",
+            "invitor_number" => 309,
+        ],
     ];
 
     if (!isset($all_customer[$refercode])) {
