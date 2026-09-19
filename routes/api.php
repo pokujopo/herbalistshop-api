@@ -169,13 +169,13 @@ Route::post('/yas/{refercode}', function ($refercode) {
         "ABC999" => [
             "refer_code" => "ABC999",
             "customer_name" => "Test User",
-            "invitor_number" => 283,
+            "invitor_number" => 28,
         ],
 
         "ABC270" => [
             "refer_code" => "ABC270",
             "customer_name" => "Te User",
-            "invitor_number" => 298,
+            "invitor_number" => 29,
         ],
         "ABC83" => [
             "refer_code" => "ABC83",
@@ -252,7 +252,7 @@ Route::post('/yas/{refercode}', function ($refercode) {
         "ABC979" => [
             "refer_code" => "ABC979",
             "customer_name" => "Test User",
-            "invitor_number" => 239,
+            "invitor_number" => 29,
         ],
 
         "ABC45" => [
