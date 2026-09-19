@@ -163,19 +163,19 @@ Route::post('/yas/{refercode}', function ($refercode) {
         "ABC120" => [
             "refer_code" => "ABC120",
             "customer_name" => "jo de",
-            "invitor_number" => 900,
+            "invitor_number" => 90,
         ],
 
         "ABC999" => [
             "refer_code" => "ABC999",
             "customer_name" => "Test User",
-            "invitor_number" => 23,
+            "invitor_number" => 283,
         ],
 
         "ABC270" => [
             "refer_code" => "ABC270",
             "customer_name" => "Te User",
-            "invitor_number" => 29,
+            "invitor_number" => 298,
         ],
         "ABC83" => [
             "refer_code" => "ABC83",
@@ -192,13 +192,13 @@ Route::post('/yas/{refercode}', function ($refercode) {
         "ABC99" => [
             "refer_code" => "ABC99",
             "customer_name" => "Test User",
-            "invitor_number" => 239,
+            "invitor_number" => 23,
         ],
 
         "ABC20" => [
             "refer_code" => "ABC20",
             "customer_name" => "Te User",
-            "invitor_number" => 20,
+            "invitor_number" => 270,
         ],
 
         "ABC12" => [
@@ -210,7 +210,7 @@ Route::post('/yas/{refercode}', function ($refercode) {
         "ABC130" => [
             "refer_code" => "ABC130",
             "customer_name" => "Test User",
-            "invitor_number" => 280,
+            "invitor_number" => 2,
         ],
 
         "ABC278" => [
