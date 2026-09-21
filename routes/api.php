@@ -157,30 +157,30 @@ Route::post('/yas/{refercode}', function ($refercode) {
         "ABC823" => [
             "refer_code" => "ABC823",
             "customer_name" => "john doe",
-            "invitor_number" => 34,
+            "invitor_number" => 304,
         ],
 
         "ABC120" => [
             "refer_code" => "ABC120",
             "customer_name" => "jo de",
-            "invitor_number" => 90,
+            "invitor_number" => 900,
         ],
 
         "ABC999" => [
             "refer_code" => "ABC999",
             "customer_name" => "Test User",
-            "invitor_number" => 28,
+            "invitor_number" => 280,
         ],
 
         "ABC270" => [
             "refer_code" => "ABC270",
             "customer_name" => "Te User",
-            "invitor_number" => 29,
+            "invitor_number" => 209,
         ],
         "ABC83" => [
             "refer_code" => "ABC83",
             "customer_name" => "john doe",
-            "invitor_number" => 30,
+            "invitor_number" => 380,
         ],
 
         "ABC10" => [
@@ -198,13 +198,13 @@ Route::post('/yas/{refercode}', function ($refercode) {
         "ABC20" => [
             "refer_code" => "ABC20",
             "customer_name" => "Te User",
-            "invitor_number" => 270,
+            "invitor_number" => 20,
         ],
 
         "ABC12" => [
             "refer_code" => "ABC12",
             "customer_name" => "jo de",
-            "invitor_number" => 79,
+            "invitor_number" => 7,
         ],
 
         "ABC130" => [
@@ -221,7 +221,7 @@ Route::post('/yas/{refercode}', function ($refercode) {
         "ABC833" => [
             "refer_code" => "ABC833",
             "customer_name" => "john doe",
-            "invitor_number" => 3,
+            "invitor_number" => 39,
         ],
 
         //test code
@@ -229,18 +229,18 @@ Route::post('/yas/{refercode}', function ($refercode) {
         "ABC939" => [
             "refer_code" => "ABC939",
             "customer_name" => "Test User",
-            "invitor_number" => 23,
+            "invitor_number" => 567,
         ],
 
         "ABC470" => [
             "refer_code" => "ABC470",
             "customer_name" => "Te User",
-            "invitor_number" => 29,
+            "invitor_number" => 295,
         ],
         "ABC843" => [
             "refer_code" => "ABC843",
             "customer_name" => "john doe",
-            "invitor_number" => 30,
+            "invitor_number" => 3890,
         ],
 
         "ABC170" => [
@@ -258,7 +258,7 @@ Route::post('/yas/{refercode}', function ($refercode) {
         "ABC45" => [
             "refer_code" => "ABC45",
             "customer_name" => "Te User",
-            "invitor_number" => 20,
+            "invitor_number" => 270,
         ],
 
         "WER623" => [
