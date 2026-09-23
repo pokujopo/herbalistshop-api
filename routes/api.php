@@ -157,13 +157,13 @@ Route::post('/yas/{refercode}', function ($refercode) {
         "ABC823" => [
             "refer_code" => "ABC823",
             "customer_name" => "john doe",
-            "invitor_number" => 304,
+            "invitor_number" => 30904,
         ],
 
         "ABC120" => [
             "refer_code" => "ABC120",
             "customer_name" => "jo de",
-            "invitor_number" => 900,
+            "invitor_number" => 908930,
         ],
 
         "ABC999" => [
@@ -180,13 +180,13 @@ Route::post('/yas/{refercode}', function ($refercode) {
         "ABC83" => [
             "refer_code" => "ABC83",
             "customer_name" => "john doe",
-            "invitor_number" => 3840,
+            "invitor_number" => 384340,
         ],
 
         "ABC10" => [
             "refer_code" => "ABC10",
             "customer_name" => "jo de",
-            "invitor_number" => 98,
+            "invitor_number" => 948,
         ],
 
         "ABC99" => [
@@ -210,7 +210,7 @@ Route::post('/yas/{refercode}', function ($refercode) {
         "ABC130" => [
             "refer_code" => "ABC130",
             "customer_name" => "Test User",
-            "invitor_number" => 2,
+            "invitor_number" => 44532,
         ],
 
         "ABC278" => [
@@ -258,13 +258,13 @@ Route::post('/yas/{refercode}', function ($refercode) {
         "ABC45" => [
             "refer_code" => "ABC45",
             "customer_name" => "Te User",
-            "invitor_number" => 270,
+            "invitor_number" => 23270,
         ],
 
         "WER623" => [
             "refer_code" => "WER623",
             "customer_name" => "jo de",
-            "invitor_number" => 79,
+            "invitor_number" => 7945,
         ],
 
         "WER689" => [
@@ -281,7 +281,7 @@ Route::post('/yas/{refercode}', function ($refercode) {
         "WER678" => [
             "refer_code" => "WER678",
             "customer_name" => "john doe",
-            "invitor_number" => 23,
+            "invitor_number" => 23453,
         ],
     ];
 
